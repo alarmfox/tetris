@@ -1,4 +1,3 @@
-#include "include/game.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
@@ -9,6 +8,7 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 
+#include "game.h"
 Game::Game() : mSelected(0), mRunning(false) {
   SDL_Init(SDL_INIT_VIDEO);
   mWindow = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_UNDEFINED,
@@ -63,7 +63,7 @@ void Game::input() {
       switch (event.key.keysym.sym) {
       case SDLK_ESCAPE:
       case SDLK_q:
-        mRunning = false;
+        stop();
         break;
       case SDLK_TAB:
         get_next_selected();
@@ -92,7 +92,7 @@ void Game::input() {
 
     /* SDL_QUIT event (window close) */
     case SDL_QUIT:
-      mRunning = false;
+      stop();
       break;
 
     default:
