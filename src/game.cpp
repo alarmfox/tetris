@@ -17,32 +17,22 @@ Game::Game() : mSelected(0), mRunning(false) {
 
   mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
 
-  mBlocks = {{
-                 {
-                     {0, 0, 0, 0},
-                     {1, 0, 0, 0},
-                     {1, 1, 0, 0},
-                     {0, 0, 0, 0},
-                 },
-                 SDL_Color{0xFF, 0x00, 0x00, 0xFF},
-                 3,
-                 GRID_PADDING_X,
-                 GRID_PADDING_Y,
-                 true,
-             },
-             {
-                 {
-                     {0, 0, 0, 0},
-                     {0, 1, 0, 0},
-                     {1, 0, 0, 0},
-                     {0, 1, 0, 0},
-                 },
-                 SDL_Color{0xFF, 0x00, 0x00, 0xFF},
-                 3,
-                 GRID_PADDING_X + CELL_SIZE * 4,
-                 GRID_PADDING_Y,
-                 false,
-             }};
+  mBlocks = {
+      {
+          {
+              {1, 0, 0, 0},
+              {1, 0, 0, 0},
+              {1, 1, 0, 0},
+              {0, 0, 0, 0},
+          },
+          SDL_Color{0xFF, 0x00, 0x00, 0xFF},
+          3,
+          0,
+          0,
+          true,
+          false,
+      },
+  };
 }
 
 Game::~Game() {
@@ -56,7 +46,6 @@ void Game::start() {
   while (mRunning) {
     draw();
     input();
-    update();
     SDL_Delay(100);
   }
 }
@@ -64,6 +53,8 @@ void Game::start() {
 void Game::input() {
 
   SDL_Event event;
+  int x = mBlocks[mSelected].x;
+  int size = mBlocks[mSelected].size * CELL_SIZE;
   /* Poll for events */
   while (SDL_PollEvent(&event)) {
 
@@ -75,9 +66,26 @@ void Game::input() {
         mRunning = false;
         break;
       case SDLK_TAB:
-        mBlocks[mSelected].selected = false;
-        mSelected = (mSelected + 1) % mBlocks.size();
-        mBlocks[mSelected].selected = true;
+        get_next_selected();
+        break;
+      case SDLK_UP:
+      case SDLK_r:
+        mBlocks[mSelected].rotate();
+        break;
+      case SDLK_DOWN:
+      case SDLK_RETURN:
+        update();
+        break;
+      case SDLK_RIGHT:
+      case SDLK_l:
+        if ((x + size) < (CELL_SIZE * GRID_SIZE_X) &&
+            !mBlocks[mSelected].landed)
+          mBlocks[mSelected].x += CELL_SIZE;
+        break;
+      case SDLK_LEFT:
+      case SDLK_h:
+        if (x >= CELL_SIZE && !mBlocks[mSelected].landed)
+          mBlocks[mSelected].x -= CELL_SIZE;
         break;
       }
       break;
@@ -112,16 +120,10 @@ void Game::draw_grid() {
   rect.w = CELL_SIZE;
   rect.h = CELL_SIZE;
 
-  SDL_SetRenderDrawColor(mRenderer, 0xFF, 0x00, 0x00, 0xFF);
-  SDL_RenderDrawLine(mRenderer, WIDTH / 2, 0, WIDTH / 2, HEIGHT);
-
-  SDL_SetRenderDrawColor(mRenderer, 0xFF, 0x00, 0x00, 0xFF);
-  SDL_RenderDrawLine(mRenderer, 0, HEIGHT / 2, WIDTH, HEIGHT / 2);
-
   for (int i = 0; i < GRID_SIZE_X; i++) {
-    rect.x = i * CELL_SIZE + GRID_PADDING_X;
+    rect.x = i * CELL_SIZE;
     for (int j = 0; j < GRID_SIZE_Y; j++) {
-      rect.y = j * CELL_SIZE + GRID_PADDING_Y;
+      rect.y = j * CELL_SIZE;
       SDL_SetRenderDrawColor(mRenderer, 0x00, 0x00, 0x00, 0xFF);
       SDL_RenderFillRect(mRenderer, &rect);
       SDL_SetRenderDrawColor(mRenderer, 0xA0, 0xA0, 0xA0, 0xFF);
@@ -155,7 +157,42 @@ void Game::draw_blocks() {
 }
 
 void Game::update() {
+  int size;
   for (auto &block : mBlocks) {
-    // block.y += CELL_SIZE;
+    size = block.size * CELL_SIZE;
+    if ((block.y + size) < (CELL_SIZE * GRID_SIZE_Y))
+      block.y += CELL_SIZE;
+    if ((block.y + size) >= (CELL_SIZE * GRID_SIZE_Y) && !block.landed) {
+      block.landed = true;
+      get_next_selected();
+    }
+  }
+}
+
+void Game::get_next_selected() {
+  mBlocks[mSelected].selected = false;
+  bool found = false;
+  for (size_t i = 0; i < mBlocks.size(); ++i) {
+    if (!mBlocks[i].landed && i != mSelected && !mBlocks[mSelected].selected) {
+      mSelected = i;
+      mBlocks[i].selected = true;
+    }
+  }
+  if (!found) {
+    mBlocks.push_back({
+        {
+            {1, 0, 1, 0},
+            {1, 1, 1, 0},
+            {0, 1, 0, 0},
+            {0, 0, 0, 0},
+        },
+        SDL_Color{0xfa, 0xaf, 0x00, 0xff},
+        3,
+        0,
+        0,
+        true,
+        false,
+    });
+    mSelected = mBlocks.size() - 1;
   }
 }

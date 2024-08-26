@@ -5,4 +5,7 @@ struct Block {
   int size;
   int x, y;
   bool selected;
+  bool landed;
+
+  void rotate();
 };

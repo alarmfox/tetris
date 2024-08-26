@@ -16,6 +16,7 @@ private:
   void input();
   void draw();
   void update();
+  void get_next_selected();
   inline void stop() { mRunning = false; }
 
 private:
@@ -23,11 +24,11 @@ private:
   size_t mSelected;
 
 private:
+  static const int CELL_SIZE = 35;
   static const int WIDTH = 640;
   static const int HEIGHT = 480;
-  static const int GRID_SIZE_X = 8;
-  static const int GRID_SIZE_Y = 9;
-  static const int CELL_SIZE = 35;
+  static const int GRID_SIZE_X = WIDTH / CELL_SIZE - 5;
+  static const int GRID_SIZE_Y = HEIGHT / CELL_SIZE;
   static const int GRID_PADDING_X = (WIDTH - (GRID_SIZE_X * CELL_SIZE)) / 2;
   static const int GRID_PADDING_Y = (HEIGHT - (GRID_SIZE_Y * CELL_SIZE)) / 2;
 
